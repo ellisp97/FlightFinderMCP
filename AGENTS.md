@@ -78,3 +78,47 @@ asyncio.run(test_function())
 
 Test files go in `tests/` mirroring `src/` structure.
 Only write tests that verify actual behavior, not coverage padding.
+
+**Important**: When testing with external dependencies (structlog, httpx), mock them:
+```python
+# Mock structlog before importing modules that use it
+class MockLogger:
+    def bind(self, **kwargs): return self
+    def debug(self, *args, **kwargs): pass
+    def info(self, *args, **kwargs): pass
+    def warning(self, *args, **kwargs): pass
+    def error(self, *args, **kwargs): pass
+
+class MockStructlog:
+    @staticmethod
+    def get_logger(): return MockLogger()
+
+sys.modules['structlog'] = MockStructlog()
+```
+
+**Date Validation**: SearchCriteria validates that departure_date is not in the past.
+Always use future dates in tests:
+```python
+from datetime import date, timedelta
+future_date = date.today() + timedelta(days=30)
+```
+
+## Infrastructure Components
+
+**HTTP Client** (`infrastructure/http/`):
+- `AsyncHTTPClient` - Async HTTP with retry, user agent rotation
+- `RateLimiter` - Token bucket rate limiter
+- `RetryConfig` - Exponential backoff configuration
+
+**Providers** (`infrastructure/providers/`):
+- `BaseFlightProvider` - Abstract base class for flight providers
+  - Template method pattern: `search()` handles rate limiting, logging, error mapping
+  - Subclasses implement: `provider_name`, `_perform_search()`, `_map_error()`
+
+## Domain Errors
+
+- `ProviderError` - Base provider error (provider, message, original exception)
+- `RateLimitError(ProviderError)` - Rate limit exceeded (retry_after)
+- `TimeoutError(ProviderError)` - Operation timed out (timeout_seconds)
+- `ValidationError` - Invalid input data
+- `CacheError` - Cache operation failure
