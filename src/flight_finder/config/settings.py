@@ -31,6 +31,10 @@ class Settings(BaseSettings):
         default="",
         description="Google Flights API key (if available)",
     )
+    searchapi_key: str = Field(
+        default="",
+        description="SearchAPI.io key for Google Flights integration",
+    )
 
     # Cache Settings
     cache_enabled: bool = Field(
@@ -134,6 +138,11 @@ class Settings(BaseSettings):
     def has_google_flights_key(self) -> bool:
         """Check if Google Flights API key is configured."""
         return bool(self.google_flights_api_key)
+
+    @property
+    def has_searchapi_key(self) -> bool:
+        """Check if SearchAPI.io key is configured."""
+        return bool(self.searchapi_key)
 
 
 @lru_cache(maxsize=1)
