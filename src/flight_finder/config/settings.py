@@ -25,7 +25,11 @@ class Settings(BaseSettings):
     # API Keys
     skyscanner_api_key: str = Field(
         default="",
-        description="Skyscanner RapidAPI key for flight searches",
+        description="Skyscanner partner API key for flight searches",
+    )
+    rapidapi_key: str = Field(
+        default="",
+        description="RapidAPI key for Skyscanner flight searches (alternative to partner API)",
     )
     google_flights_api_key: str = Field(
         default="",
@@ -85,7 +89,7 @@ class Settings(BaseSettings):
     )
 
     # Provider Settings
-    default_provider: Literal["skyscanner", "google_flights", "mock"] = Field(
+    default_provider: Literal["skyscanner", "rapidapi_skyscanner", "google_flights", "mock"] = Field(
         default="skyscanner",
         description="Default flight data provider",
     )
@@ -133,6 +137,11 @@ class Settings(BaseSettings):
     def has_skyscanner_key(self) -> bool:
         """Check if Skyscanner API key is configured."""
         return bool(self.skyscanner_api_key)
+
+    @property
+    def has_rapidapi_key(self) -> bool:
+        """Check if RapidAPI key is configured."""
+        return bool(self.rapidapi_key)
 
     @property
     def has_google_flights_key(self) -> bool:

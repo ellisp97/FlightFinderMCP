@@ -179,3 +179,72 @@ python tests/infrastructure/providers/skyscanner/test_response_mapper.py
 
 Use MockHTTPClient and MockRateLimiter for unit tests. Mock responses should include
 session token for create, and full API structure for poll results.
+
+## RapidAPI Skyscanner Provider
+
+**Location**: `infrastructure/providers/rapidapi_skyscanner/`
+
+**Purpose**: Alternative to the direct Skyscanner Partner API using RapidAPI as an intermediary.
+This is useful when the Skyscanner Partner API key is difficult to obtain, as RapidAPI provides
+easier access to Skyscanner flight data through their marketplace.
+
+**Files**:
+- `constants.py` - RapidAPI host, API URLs, polling config, cabin class mappings
+- `api_client.py` - Session creation and polling via RapidAPI headers
+- `response_mapper.py` - Maps RapidAPI/Skyscanner response to Flight entities
+- `rapidapi_provider.py` - Main provider class extending BaseFlightProvider
+
+**Usage**:
+```python
+from flight_finder.infrastructure.providers.rapidapi_skyscanner import RapidAPISkyscannerProvider
+from flight_finder.infrastructure.http.async_http_client import AsyncHTTPClient
+from flight_finder.infrastructure.http.rate_limiter import RateLimiter
+
+http_client = AsyncHTTPClient()
+rate_limiter = RateLimiter(rate=1, per=3.0)  # 1 request per 3 seconds
+provider = RapidAPISkyscannerProvider(
+    api_key="your_rapidapi_key",
+    http_client=http_client,
+    rate_limiter=rate_limiter,
+)
+
+result = await provider.search(criteria)
+# Result is Ok[list[Flight]] or Err[ProviderError]
+```
+
+**Configuration**:
+Set `FLIGHT_FINDER_RAPIDAPI_KEY` environment variable with your RapidAPI key.
+Set `FLIGHT_FINDER_DEFAULT_PROVIDER=rapidapi_skyscanner` to use as default.
+
+**API Flow**:
+1. Create session via POST to `/v3/flights/live/search/create` with RapidAPI headers
+2. Poll results via GET to `/v3/flights/live/search/poll/{sessionToken}`
+3. Poll max 10 times with 2 second intervals until `RESULT_STATUS_COMPLETE`
+4. Map response to Flight entities (same structure as partner API)
+5. Apply filters (non_stop_only, max_stops) and sort by price
+
+**Key Difference from Partner API**:
+The main difference is authentication - RapidAPI uses `X-RapidAPI-Key` and `X-RapidAPI-Host`
+headers instead of the `X-API-Key` header used by the partner API. The response structure
+is identical, so the same response mapper logic applies.
+
+**RapidAPI Headers**:
+```python
+headers = {
+    "X-RapidAPI-Key": "your_rapidapi_key",
+    "X-RapidAPI-Host": "skyscanner-api.p.rapidapi.com",
+    "Content-Type": "application/json",
+}
+```
+
+**Rate Limiting**:
+RapidAPI free tier: ~500 requests/month
+Rate limiter configured at 1 request per 3 seconds to avoid hitting limits.
+
+**Testing**:
+Tests follow the same pattern as the Skyscanner provider:
+```python
+python tests/infrastructure/providers/rapidapi_skyscanner/test_rapidapi_provider.py
+python tests/infrastructure/providers/rapidapi_skyscanner/test_api_client.py
+python tests/infrastructure/providers/rapidapi_skyscanner/test_response_mapper.py
+```

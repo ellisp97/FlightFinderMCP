@@ -1,0 +1,32 @@
+from __future__ import annotations
+
+API_HOST = "skyscanner-api.p.rapidapi.com"
+API_BASE_URL = f"https://{API_HOST}/v3"
+
+BROWSE_ROUTES_PATH = "/flights/browse/browseRoutes"
+BROWSE_QUOTES_PATH = "/flights/browse/browseQuotes"
+BROWSE_DATES_PATH = "/flights/browse/browseDates"
+
+LIVE_SEARCH_CREATE_PATH = "/flights/live/search/create"
+LIVE_SEARCH_POLL_PATH = "/flights/live/search/poll/{session_token}"
+
+MAX_POLL_ATTEMPTS = 10
+POLL_INTERVAL_SECONDS = 2.0
+
+RATE_LIMIT_REQUESTS_PER_WINDOW = 1
+RATE_LIMIT_WINDOW_SECONDS = 3.0
+
+STATUS_COMPLETE = "RESULT_STATUS_COMPLETE"
+STATUS_IN_PROGRESS = "RESULT_STATUS_IN_PROGRESS"
+STATUS_FAILED = "RESULT_STATUS_FAILED"
+
+CABIN_CLASS_MAPPING = {
+    "ECONOMY": "CABIN_CLASS_ECONOMY",
+    "PREMIUM_ECONOMY": "CABIN_CLASS_PREMIUM_ECONOMY",
+    "BUSINESS": "CABIN_CLASS_BUSINESS",
+    "FIRST": "CABIN_CLASS_FIRST",
+}
+
+DEFAULT_MARKET = "US"
+DEFAULT_LOCALE = "en-US"
+DEFAULT_CURRENCY = "USD"
