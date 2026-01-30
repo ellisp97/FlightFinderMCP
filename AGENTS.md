@@ -122,3 +122,60 @@ future_date = date.today() + timedelta(days=30)
 - `TimeoutError(ProviderError)` - Operation timed out (timeout_seconds)
 - `ValidationError` - Invalid input data
 - `CacheError` - Cache operation failure
+
+## Skyscanner Provider
+
+**Location**: `infrastructure/providers/skyscanner/`
+
+**Files**:
+- `constants.py` - API URLs, polling config, CSS selectors for scraping
+- `api_client.py` - Session creation and polling for Live Pricing API
+- `response_mapper.py` - Maps Skyscanner API response to Flight entities
+- `skyscanner_provider.py` - Main provider class extending BaseFlightProvider
+
+**Usage**:
+```python
+from flight_finder.infrastructure.providers.skyscanner import SkyscannerProvider
+from flight_finder.infrastructure.http.async_http_client import AsyncHTTPClient
+from flight_finder.infrastructure.http.rate_limiter import RateLimiter
+
+http_client = AsyncHTTPClient()
+rate_limiter = RateLimiter(rate=1, per=3.0)  # 1 request per 3 seconds
+provider = SkyscannerProvider(
+    api_key="your_api_key",
+    http_client=http_client,
+    rate_limiter=rate_limiter,
+)
+
+result = await provider.search(criteria)
+# Result is Ok[list[Flight]] or Err[ProviderError]
+```
+
+**API Flow**:
+1. Create session via POST to `/flights/live/search/create`
+2. Poll results via GET to `/flights/live/search/poll/{sessionToken}`
+3. Poll max 10 times with 2 second intervals until `RESULT_STATUS_COMPLETE`
+4. Map response to Flight entities
+5. Apply filters (non_stop_only, max_stops) and sort by price
+
+**Response Structure**:
+The Skyscanner API returns a nested structure:
+- `content.results.itineraries` - pricing and leg references
+- `content.results.legs` - flight timing and segment references
+- `content.results.segments` - carrier and flight number details
+- `content.results.places` - airport information (IATA codes)
+- `content.results.carriers` - airline information
+
+**Price Handling**:
+API returns prices in cents (e.g., "29900" = $299.00). The mapper divides by 100.
+
+**Testing**:
+Tests are in `tests/infrastructure/providers/skyscanner/`. Run with:
+```python
+python tests/infrastructure/providers/skyscanner/test_skyscanner_provider.py
+python tests/infrastructure/providers/skyscanner/test_api_client.py
+python tests/infrastructure/providers/skyscanner/test_response_mapper.py
+```
+
+Use MockHTTPClient and MockRateLimiter for unit tests. Mock responses should include
+session token for create, and full API structure for poll results.

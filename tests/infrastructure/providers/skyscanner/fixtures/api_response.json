@@ -1,0 +1,213 @@
+{
+  "status": "RESULT_STATUS_COMPLETE",
+  "content": {
+    "results": {
+      "itineraries": {
+        "itin_1": {
+          "pricingOptions": [
+            {
+              "price": {
+                "amount": "29900",
+                "unit": "USD"
+              },
+              "agentIds": ["agent_1"],
+              "items": [
+                {
+                  "price": {"amount": "29900", "unit": "USD"},
+                  "agentId": "agent_1"
+                }
+              ]
+            }
+          ],
+          "legIds": ["leg_1"]
+        },
+        "itin_2": {
+          "pricingOptions": [
+            {
+              "price": {
+                "amount": "45000",
+                "unit": "USD"
+              },
+              "agentIds": ["agent_2"]
+            }
+          ],
+          "legIds": ["leg_2"]
+        }
+      },
+      "legs": {
+        "leg_1": {
+          "originPlaceId": "JFK",
+          "destinationPlaceId": "LAX",
+          "departureDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 15,
+            "hour": 8,
+            "minute": 0,
+            "second": 0
+          },
+          "arrivalDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 15,
+            "hour": 11,
+            "minute": 30,
+            "second": 0
+          },
+          "durationInMinutes": 330,
+          "stopCount": 0,
+          "segmentIds": ["seg_1"]
+        },
+        "leg_2": {
+          "originPlaceId": "JFK",
+          "destinationPlaceId": "LAX",
+          "departureDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 15,
+            "hour": 14,
+            "minute": 0,
+            "second": 0
+          },
+          "arrivalDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 15,
+            "hour": 19,
+            "minute": 45,
+            "second": 0
+          },
+          "durationInMinutes": 405,
+          "stopCount": 1,
+          "segmentIds": ["seg_2", "seg_3"]
+        }
+      },
+      "segments": {
+        "seg_1": {
+          "originPlaceId": "JFK",
+          "destinationPlaceId": "LAX",
+          "departureDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 15,
+            "hour": 8,
+            "minute": 0
+          },
+          "arrivalDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 15,
+            "hour": 11,
+            "minute": 30
+          },
+          "durationInMinutes": 330,
+          "marketingCarrierId": "1",
+          "operatingCarrierId": "1",
+          "marketingFlightNumber": "123"
+        },
+        "seg_2": {
+          "originPlaceId": "JFK",
+          "destinationPlaceId": "ORD",
+          "departureDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 15,
+            "hour": 14,
+            "minute": 0
+          },
+          "arrivalDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 15,
+            "hour": 15,
+            "minute": 30
+          },
+          "durationInMinutes": 150,
+          "marketingCarrierId": "2",
+          "operatingCarrierId": "2",
+          "marketingFlightNumber": "456"
+        },
+        "seg_3": {
+          "originPlaceId": "ORD",
+          "destinationPlaceId": "LAX",
+          "departureDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 15,
+            "hour": 17,
+            "minute": 0
+          },
+          "arrivalDateTime": {
+            "year": 2026,
+            "month": 6,
+            "day": 15,
+            "hour": 19,
+            "minute": 45
+          },
+          "durationInMinutes": 225,
+          "marketingCarrierId": "2",
+          "operatingCarrierId": "2",
+          "marketingFlightNumber": "789"
+        }
+      },
+      "places": {
+        "JFK": {
+          "entityId": "JFK",
+          "parentId": "NYC",
+          "name": "John F Kennedy International",
+          "type": "PLACE_TYPE_AIRPORT",
+          "iata": "JFK",
+          "countryName": "United States"
+        },
+        "LAX": {
+          "entityId": "LAX",
+          "parentId": "LAX",
+          "name": "Los Angeles International",
+          "type": "PLACE_TYPE_AIRPORT",
+          "iata": "LAX",
+          "countryName": "United States"
+        },
+        "ORD": {
+          "entityId": "ORD",
+          "parentId": "CHI",
+          "name": "O'Hare International",
+          "type": "PLACE_TYPE_AIRPORT",
+          "iata": "ORD",
+          "countryName": "United States"
+        }
+      },
+      "carriers": {
+        "1": {
+          "name": "Delta Air Lines",
+          "iata": "DL",
+          "imageUrl": "https://logos.skyscnr.com/images/airlines/favicon/DL.png"
+        },
+        "2": {
+          "name": "American Airlines",
+          "iata": "AA",
+          "imageUrl": "https://logos.skyscnr.com/images/airlines/favicon/AA.png"
+        }
+      },
+      "agents": {
+        "agent_1": {
+          "name": "Delta",
+          "type": "AGENT_TYPE_AIRLINE",
+          "imageUrl": "https://logos.skyscnr.com/images/agents/delta.png"
+        },
+        "agent_2": {
+          "name": "American Airlines",
+          "type": "AGENT_TYPE_AIRLINE",
+          "imageUrl": "https://logos.skyscnr.com/images/agents/aa.png"
+        }
+      }
+    },
+    "stats": {
+      "itineraries": {
+        "total": {
+          "count": 2,
+          "minPrice": {"amount": "29900", "unit": "USD"}
+        }
+      }
+    }
+  }
+}
