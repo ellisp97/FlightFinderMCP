@@ -248,3 +248,99 @@ python tests/infrastructure/providers/rapidapi_skyscanner/test_rapidapi_provider
 python tests/infrastructure/providers/rapidapi_skyscanner/test_api_client.py
 python tests/infrastructure/providers/rapidapi_skyscanner/test_response_mapper.py
 ```
+
+## Provider Factory & Aggregation
+
+**Location**: `infrastructure/providers/`
+
+The provider factory and aggregation system manages multiple flight providers with caching,
+parallel execution, and deduplication.
+
+**Components**:
+
+1. **CacheDecorator** (`cache_decorator.py`):
+   - Wraps any `IFlightProvider` with automatic caching
+   - Checks cache before making provider call
+   - Stores successful results, skips caching errors
+   - Provider name becomes `{original}_cached`
+
+2. **ProviderRegistry** (`provider_registry.py`):
+   - Manages multiple providers with priority and enable/disable
+   - `register(provider, priority=0, enabled=True, weight=1.0)`
+   - `get_by_priority(limit=None)` - returns enabled providers sorted by priority
+   - `enable(name)` / `disable(name)` - dynamic provider control
+
+3. **MultiProviderAggregator** (`multi_provider_aggregator.py`):
+   - Queries multiple providers in parallel using `asyncio.gather`
+   - Handles partial failures (returns results if at least one succeeds)
+   - Deduplicates similar flights across providers
+   - Sorts results by price
+
+4. **ProviderFactory** (`provider_factory.py`):
+   - Creates providers with proper dependencies
+   - Wraps with cache decorator if enabled
+   - Registers providers in internal registry
+   - Creates aggregator with all available providers
+
+**Usage**:
+```python
+from flight_finder.infrastructure.providers import ProviderFactory
+
+# Create factory
+factory = ProviderFactory()
+
+# Option 1: Use single provider
+provider = factory.create_skyscanner_provider()
+result = await provider.search(criteria)
+
+# Option 2: Use multi-provider aggregator (recommended)
+aggregator = factory.create_aggregator()
+result = await aggregator.search(criteria)
+
+# Access cache and registry
+cache = factory.get_cache()
+registry = factory.get_registry()
+
+# Cleanup
+await factory.close()
+```
+
+**Provider Priorities**:
+- Skyscanner: 90 (highest)
+- Google Flights: 80
+- RapidAPI Skyscanner: 70
+
+**Deduplication Criteria**:
+Two flights are considered duplicates if ALL of these match:
+- Same origin and destination airports
+- Same airline
+- Departure within 30 minutes
+- Arrival within 30 minutes
+- Price within 5%
+
+**Configuration**:
+Environment variables for API keys:
+- `FLIGHT_FINDER_SKYSCANNER_API_KEY`
+- `FLIGHT_FINDER_SEARCHAPI_KEY` (for Google Flights)
+- `FLIGHT_FINDER_RAPIDAPI_KEY` (for RapidAPI Skyscanner)
+
+Cache configuration:
+- `FLIGHT_FINDER_CACHE_TTL_SECONDS` (default: 300)
+- `FLIGHT_FINDER_CACHE_MAX_SIZE` (default: 1000)
+
+**Testing**:
+Run the provider infrastructure tests:
+```python
+python tests/infrastructure/providers/run_provider_tests.py
+```
+
+**Exports** from `infrastructure/providers/__init__.py`:
+- `BaseFlightProvider`
+- `CacheDecorator`
+- `GoogleFlightsProvider`
+- `MultiProviderAggregator`
+- `ProviderFactory`
+- `ProviderMetadata`
+- `ProviderRegistry`
+- `RapidAPISkyscannerProvider`
+- `SkyscannerProvider`
