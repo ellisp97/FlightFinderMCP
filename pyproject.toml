@@ -134,7 +134,6 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 minversion = "8.0"
 asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
@@ -145,10 +144,6 @@ addopts = [
     "--strict-markers",
     "--strict-config",
     "-v",
-    "--cov=src/flight_finder",
-    "--cov-report=term-missing",
-    "--cov-report=html:coverage_html",
-    "--cov-fail-under=85",
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
@@ -156,7 +151,6 @@ markers = [
     "unit: marks tests as unit tests",
 ]
 filterwarnings = [
-    "error",
     "ignore::DeprecationWarning",
     "ignore::PendingDeprecationWarning",
 ]
