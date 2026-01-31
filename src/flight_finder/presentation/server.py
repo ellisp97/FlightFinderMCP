@@ -156,14 +156,16 @@ def main() -> None:
     async def cleanup() -> None:
         """Cleanup resources on shutdown."""
         await factory.close()
-        logger.info("server_shutdown_complete")
 
     try:
         mcp.run()
     except KeyboardInterrupt:
-        logger.info("server_interrupted")
+        pass
     finally:
-        asyncio.run(cleanup())
+        try:
+            asyncio.run(cleanup())
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
