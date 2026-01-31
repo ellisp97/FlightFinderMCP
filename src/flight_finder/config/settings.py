@@ -39,6 +39,10 @@ class Settings(BaseSettings):
         default="",
         description="SearchAPI.io key for Google Flights integration",
     )
+    kiwi_api_key: str = Field(
+        default="",
+        description="RapidAPI key for Kiwi.com flight searches",
+    )
 
     # Cache Settings
     cache_enabled: bool = Field(
@@ -89,7 +93,7 @@ class Settings(BaseSettings):
     )
 
     # Provider Settings
-    default_provider: Literal["skyscanner", "rapidapi_skyscanner", "google_flights", "mock"] = Field(
+    default_provider: Literal["skyscanner", "rapidapi_skyscanner", "google_flights", "kiwi", "mock"] = Field(
         default="skyscanner",
         description="Default flight data provider",
     )
@@ -152,6 +156,11 @@ class Settings(BaseSettings):
     def has_searchapi_key(self) -> bool:
         """Check if SearchAPI.io key is configured."""
         return bool(self.searchapi_key)
+
+    @property
+    def has_kiwi_key(self) -> bool:
+        """Check if Kiwi API key is configured."""
+        return bool(self.kiwi_api_key)
 
 
 @lru_cache(maxsize=1)

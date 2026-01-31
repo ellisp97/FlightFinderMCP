@@ -1,6 +1,7 @@
 from flight_finder.infrastructure.providers.base_provider import BaseFlightProvider
 from flight_finder.infrastructure.providers.cache_decorator import CacheDecorator
 from flight_finder.infrastructure.providers.google_flights import GoogleFlightsProvider
+from flight_finder.infrastructure.providers.kiwi import KiwiProvider
 from flight_finder.infrastructure.providers.multi_provider_aggregator import (
     MultiProviderAggregator,
 )
@@ -18,6 +19,7 @@ __all__ = [
     "BaseFlightProvider",
     "CacheDecorator",
     "GoogleFlightsProvider",
+    "KiwiProvider",
     "MultiProviderAggregator",
     "ProviderFactory",
     "ProviderMetadata",

@@ -17,6 +17,7 @@ from flight_finder.infrastructure.providers.provider_registry import ProviderReg
 from flight_finder.infrastructure.providers.rapidapi_skyscanner import (
     RapidAPISkyscannerProvider,
 )
+from flight_finder.infrastructure.providers.kiwi import KiwiProvider
 from flight_finder.infrastructure.providers.skyscanner import SkyscannerProvider
 
 if TYPE_CHECKING:
@@ -124,6 +125,32 @@ class ProviderFactory:
         self._logger.info("rapidapi_skyscanner_provider_created")
         return provider
 
+    def create_kiwi_provider(
+        self,
+        with_cache: bool = True,
+    ) -> IFlightProvider | None:
+        if not self._settings.has_kiwi_key:
+            self._logger.warning("kiwi_key_missing")
+            return None
+
+        rate_limiter = RateLimiter(rate=1, per=2.0)
+
+        provider: IFlightProvider = KiwiProvider(
+            api_key=self._settings.kiwi_api_key,
+            http_client=self._http_client,
+            rate_limiter=rate_limiter,
+        )
+
+        if with_cache:
+            provider = CacheDecorator(
+                provider=provider,
+                cache=self._cache,
+                ttl_seconds=self._settings.cache_ttl_seconds,
+            )
+
+        self._logger.info("kiwi_provider_created")
+        return provider
+
     def create_all_providers(
         self,
         with_cache: bool = True,
@@ -148,6 +175,12 @@ class ProviderFactory:
             providers.append(rapidapi)
             if register:
                 self._registry.register(rapidapi, priority=70)
+
+        kiwi = self.create_kiwi_provider(with_cache=with_cache)
+        if kiwi:
+            providers.append(kiwi)
+            if register:
+                self._registry.register(kiwi, priority=75)
 
         self._logger.info(
             "providers_created",
