@@ -2,7 +2,7 @@
 
 A production-grade MCP server that enables Claude to search and compare flights across multiple providers directly from your conversations.
 
-![Flight Search Example](.vibe-images/ace546f4-e6a6-4aa7-acd3-af3af84cba82_image.png)
+![Flight Search Results](images/flight-results.png)
 
 ## Features
 
@@ -57,7 +57,7 @@ cp .env.example .env
 
 Once configured, you can ask Claude to search for flights naturally:
 
-![Search Request](.vibe-images/fc93cf31-a260-49b4-800d-b6839a723d8a_image.png)
+![Search Request](images/search-request.png)
 
 Claude will use the MCP tools to:
 - Search across multiple flight providers
@@ -65,7 +65,11 @@ Claude will use the MCP tools to:
 - Filter by your preferences (non-stop, cabin class, etc.)
 - Recommend the best options
 
-![Search Results](.vibe-images/6c3f3334-e687-464b-a293-f24f76bba51f_image.png)
+![Flight Details](images/flight-details.png)
+
+### Example Conversation
+
+![Usage Example](images/usage-example.png)
 
 ### Available Tools
 
