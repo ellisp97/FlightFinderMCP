@@ -7,7 +7,7 @@ import structlog
 
 from flight_finder.domain.entities.flight import Flight
 from flight_finder.domain.value_objects.price import Price
-from .time_parser import parse_flight_time
+from .time_parser import parse_airport_datetime, parse_flight_time
 
 if TYPE_CHECKING:
     from flight_finder.domain.entities.search_criteria import SearchCriteria
@@ -64,16 +64,26 @@ class SearchAPIResponseMapper:
         first_segment = flight_segments[0]
         last_segment = flight_segments[-1]
 
-        departure_time = parse_flight_time(
-            first_segment.get("departure_time", "12:00 PM"),
-            criteria.departure_date,
-        )
+        # Parse departure from nested airport structure
+        departure_airport = first_segment.get("departure_airport", {})
+        if departure_airport and "date" in departure_airport:
+            departure_time = parse_airport_datetime(departure_airport)
+        else:
+            departure_time = parse_flight_time(
+                first_segment.get("departure_time", "12:00 PM"),
+                criteria.departure_date,
+            )
 
-        arrival_time = parse_flight_time(
-            last_segment.get("arrival_time", "12:00 PM"),
-            criteria.departure_date,
-            previous_time=departure_time,
-        )
+        # Parse arrival from nested airport structure
+        arrival_airport = last_segment.get("arrival_airport", {})
+        if arrival_airport and "date" in arrival_airport:
+            arrival_time = parse_airport_datetime(arrival_airport)
+        else:
+            arrival_time = parse_flight_time(
+                last_segment.get("arrival_time", "12:00 PM"),
+                criteria.departure_date,
+                previous_time=departure_time,
+            )
 
         total_stops = self._calculate_stops(flight_segments)
 
