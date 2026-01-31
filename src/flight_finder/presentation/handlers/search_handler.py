@@ -17,7 +17,6 @@ from flight_finder.presentation.utils.error_formatter import format_error_respon
 
 if TYPE_CHECKING:
     from flight_finder.application.use_cases.search_flights import SearchFlightsUseCase
-    from flight_finder.domain.entities.flight import Flight
 
 logger = structlog.get_logger()
 
@@ -80,9 +79,38 @@ class SearchHandler:
 
             match result:
                 case Ok(search_result):
-                    # Return markdown directly for better display in chat
-                    return self._format_flights_for_display(
-                        search_result.flights, origin, destination
+                    flights_dto = [flight_to_dto(f) for f in search_result.flights]
+
+                    min_price = (
+                        min(f.price.amount for f in search_result.flights)
+                        if search_result.flights
+                        else None
+                    )
+                    max_price = (
+                        max(f.price.amount for f in search_result.flights)
+                        if search_result.flights
+                        else None
+                    )
+
+                    return json.dumps(
+                        {
+                            "success": True,
+                            "summary": {
+                                "total_flights": search_result.total_results,
+                                "search_duration_ms": round(
+                                    search_result.search_duration_ms, 2
+                                ),
+                                "providers_used": search_result.providers_used,
+                                "cache_hit": search_result.cache_hit,
+                                "price_range": {
+                                    "min": str(min_price) if min_price else None,
+                                    "max": str(max_price) if max_price else None,
+                                },
+                            },
+                            "flights": [f.model_dump() for f in flights_dto],
+                        },
+                        indent=2,
+                        default=str,
                     )
 
                 case Err(error):
@@ -103,51 +131,3 @@ class SearchHandler:
         except Exception as e:
             self._logger.exception("search_handler_error", error=str(e))
             return format_error_response(e)
-
-    def _format_flights_for_display(
-        self,
-        flights: list[Flight],
-        origin: str,
-        destination: str,
-    ) -> str:
-        """Format flights as markdown for better display in chat interfaces."""
-        if not flights:
-            return "No flights found."
-
-        lines = []
-        lines.append(f"## Flights from {origin} to {destination}\n")
-
-        # Group by price tier
-        sorted_flights = sorted(flights, key=lambda f: f.price.amount)
-
-        for i, flight in enumerate(sorted_flights[:10], 1):
-            dep_time = flight.departure_time.strftime("%I:%M %p")
-            arr_time = flight.arrival_time.strftime("%I:%M %p")
-            arr_day = ""
-            if flight.arrival_time.date() > flight.departure_time.date():
-                days_diff = (flight.arrival_time.date() - flight.departure_time.date()).days
-                arr_day = f" (+{days_diff})"
-
-            duration_h = flight.duration_minutes // 60
-            duration_m = flight.duration_minutes % 60
-            duration_str = f"{duration_h}h {duration_m}m"
-
-            stops_str = "Nonstop" if flight.is_non_stop else f"{flight.stops} stop{'s' if flight.stops > 1 else ''}"
-
-            airline = flight.airline_name or flight.airline
-            flight_num = f" {flight.flight_number}" if flight.flight_number else ""
-
-            # Build the flight card
-            lines.append(f"### {i}. {airline}{flight_num} - ${flight.price.amount}")
-            lines.append(f"- **Departs:** {dep_time} -> **Arrives:** {arr_time}{arr_day}")
-            lines.append(f"- **Duration:** {duration_str} | **{stops_str}**")
-
-            if flight.booking_url:
-                lines.append(f"- [Book this flight]({flight.booking_url})")
-
-            lines.append("")  # Blank line between flights
-
-        if len(flights) > 10:
-            lines.append(f"*...and {len(flights) - 10} more flights available.*")
-
-        return "\n".join(lines)
