@@ -50,6 +50,7 @@ def create_server() -> tuple[FastMCP, ProviderFactory]:
         settings.has_skyscanner_key
         or settings.has_searchapi_key
         or settings.has_rapidapi_key
+        or settings.has_kiwi_key
     ):
         log.error("no_api_keys_configured")
         raise ConfigurationError(
