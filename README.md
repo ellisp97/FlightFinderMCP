@@ -2,8 +2,6 @@
 
 A production-grade MCP server that enables Claude to search and compare flights across multiple providers directly from your conversations.
 
-![Flight Search Example](.vibe-images/ace546f4-e6a6-4aa7-acd3-af3af84cba82_image.png)
-
 ## Features
 
 - **Multi-Provider Search** - Aggregates results from Skyscanner, Google Flights, and Kiwi.com
@@ -55,17 +53,12 @@ cp .env.example .env
 
 ## Usage
 
-Once configured, you can ask Claude to search for flights naturally:
+Once configured, you can ask Claude to search for flights naturally in conversation. Claude will use the MCP tools to:
 
-![Search Request](.vibe-images/fc93cf31-a260-49b4-800d-b6839a723d8a_image.png)
-
-Claude will use the MCP tools to:
 - Search across multiple flight providers
 - Compare prices and flight times
 - Filter by your preferences (non-stop, cabin class, etc.)
 - Recommend the best options
-
-![Search Results](.vibe-images/6c3f3334-e687-464b-a293-f24f76bba51f_image.png)
 
 ### Available Tools
 
