@@ -344,3 +344,206 @@ python tests/infrastructure/providers/run_provider_tests.py
 - `ProviderRegistry`
 - `RapidAPISkyscannerProvider`
 - `SkyscannerProvider`
+
+## Application Layer
+
+**Location**: `application/`
+
+The application layer contains use cases that orchestrate domain logic and infrastructure.
+
+**Structure**:
+```
+application/
+├── __init__.py         # Exports all use cases and DTOs
+├── dtos/               # Data Transfer Objects
+│   ├── flight_dtos.py  # FlightSearchResult, FlightFilters, FlightRecommendations
+│   └── provider_dtos.py # CacheStats, ProviderHealth
+└── use_cases/
+    ├── search_flights.py      # SearchFlightsUseCase
+    ├── filter_flights.py      # FilterFlightsUseCase
+    ├── get_recommendations.py # GetRecommendationsUseCase
+    └── manage_cache.py        # ManageCacheUseCase
+```
+
+**Use Cases**:
+
+1. **SearchFlightsUseCase** - Main search orchestration
+   - Receives `SearchCriteria` (domain model)
+   - Delegates to `IFlightProvider` (typically MultiProviderAggregator)
+   - Applies max results limit from settings
+   - Returns `Result[FlightSearchResult, SearchError]`
+
+2. **FilterFlightsUseCase** - Post-search filtering
+   - Pure function: filters and sorts existing flights
+   - Supports price range, max stops, airlines, sort options
+   - Returns `Result[list[Flight], FilterError]`
+
+3. **GetRecommendationsUseCase** - Flight recommendations
+   - Analyzes flights to find cheapest, fastest, best value
+   - Returns `Result[FlightRecommendations, RecommendationError]`
+
+4. **ManageCacheUseCase** - Cache operations
+   - Get cache statistics
+   - Clear cache
+   - Returns `Result[CacheStats, CacheManagementError]` or `Result[dict, CacheManagementError]`
+
+**Usage Pattern**:
+```python
+from flight_finder.application import SearchFlightsUseCase, FlightSearchResult
+from flight_finder.config import get_settings
+from flight_finder.infrastructure.providers import ProviderFactory
+
+factory = ProviderFactory()
+aggregator = factory.create_aggregator()
+settings = get_settings()
+
+search_use_case = SearchFlightsUseCase(provider=aggregator, settings=settings)
+result = await search_use_case.execute(criteria)
+
+match result:
+    case Ok(search_result):
+        # search_result.flights, search_result.total_results, etc.
+        pass
+    case Err(error):
+        # error.message, error.providers_failed, etc.
+        pass
+```
+
+**DTOs**:
+- `FlightSearchResult` - Contains flights, total_results, providers_used, search_duration_ms, cache_hit
+- `FlightFilters` - max_price, min_price, max_stops, airlines, sort_by, sort_descending
+- `FlightRecommendations` - cheapest, fastest, best_value (Flight or None)
+- `CacheStats` - size, max_size, hits, misses, hit_rate
+
+## Presentation Layer (MCP Server)
+
+**Location**: `presentation/`
+
+The presentation layer exposes the flight finder as an MCP (Model Context Protocol) server.
+
+**Structure**:
+```
+presentation/
+├── __init__.py         # Exports create_server, main
+├── server.py           # Main entry point, FastMCP setup
+├── handlers/
+│   ├── search_handler.py # SearchHandler for search_flights tool
+│   └── cache_handler.py  # CacheHandler for cache tools
+├── schemas/
+│   ├── requests.py     # SearchFlightsRequest, PassengerCount
+│   ├── responses.py    # FlightDTO, PriceDTO
+│   └── converters.py   # Domain ↔ DTO converters
+└── utils/
+    └── error_formatter.py # format_error_response
+```
+
+**Entry Point** (defined in pyproject.toml):
+```bash
+flight-finder-mcp = "flight_finder.presentation.server:main"
+```
+
+**MCP Tools Exposed**:
+
+1. **search_flights** - Search for flights between airports
+   - Parameters: origin, destination, departure_date, return_date, adults, children, infants, cabin_class, max_stops, non_stop_only
+   - Returns: JSON with flight results or error
+
+2. **get_cache_stats** - Get cache statistics
+   - Returns: JSON with cache size, hits, misses, hit rate
+
+3. **clear_cache** - Clear all cached search results
+   - Returns: JSON confirmation
+
+**Server Lifecycle**:
+```python
+from flight_finder.presentation.server import create_server, main
+
+# Option 1: Run directly
+main()  # Starts STDIO server
+
+# Option 2: Create server for testing
+mcp, factory = create_server()
+# mcp is FastMCP instance, factory is ProviderFactory for cleanup
+```
+
+**Handler Pattern**:
+```python
+class SearchHandler:
+    def __init__(self, search_use_case: SearchFlightsUseCase) -> None:
+        self._search_use_case = search_use_case
+
+    async def handle_search(self, origin: str, destination: str, ...) -> str:
+        # 1. Parse parameters (date strings → date objects)
+        # 2. Convert to domain model (to_search_criteria_from_params)
+        # 3. Execute use case
+        # 4. Convert result to JSON response
+        pass
+```
+
+**Schema Converters**:
+```python
+from flight_finder.presentation.schemas.converters import (
+    to_search_criteria_from_params,  # Raw params → SearchCriteria
+    flight_to_dto,                    # Flight → FlightDTO
+    flights_to_dtos,                  # list[Flight] → list[FlightDTO]
+)
+```
+
+**Error Formatting**:
+```python
+from flight_finder.presentation.utils.error_formatter import format_error_response
+
+# Converts any exception to JSON error response
+error_json = format_error_response(some_exception)
+# Returns: {"success": false, "error": {"code": "...", "message": "..."}}
+```
+
+**Logging**:
+All logs go to stderr (required for MCP STDIO transport).
+Stdout is reserved for JSON-RPC protocol messages.
+```python
+from flight_finder.config import configure_logging
+configure_logging(level="INFO", log_format="console")
+```
+
+**Configuration**:
+Environment variables (all prefixed with `FLIGHT_FINDER_`):
+- `SKYSCANNER_API_KEY`, `RAPIDAPI_KEY`, `SEARCHAPI_KEY` - At least one required
+- `LOG_LEVEL` - DEBUG, INFO, WARNING, ERROR, CRITICAL
+- `LOG_FORMAT` - console or json
+- `CACHE_TTL_SECONDS`, `CACHE_MAX_SIZE`
+- `MAX_SEARCH_RESULTS` - Limit returned flights
+- `SERVER_NAME`, `SERVER_VERSION`
+
+**Claude Desktop Configuration**:
+```json
+{
+  "mcpServers": {
+    "flight-finder": {
+      "command": "flight-finder-mcp",
+      "env": {
+        "FLIGHT_FINDER_RAPIDAPI_KEY": "your_key_here"
+      }
+    }
+  }
+}
+```
+
+**Testing Presentation Layer**:
+```python
+import sys
+sys.path.insert(0, 'src')
+
+# Mock structlog first (see Testing section)
+# ... structlog mock setup ...
+
+from flight_finder.presentation.schemas.converters import to_search_criteria_from_params
+from datetime import date, timedelta
+
+future_date = date.today() + timedelta(days=30)
+criteria = to_search_criteria_from_params(
+    origin="JFK",
+    destination="LAX",
+    departure_date=future_date,
+)
+```
