@@ -34,6 +34,7 @@ class Flight(BaseModel):
     airline_name: str | None = Field(default=None, description="Full airline name (optional)")
     aircraft_type: str | None = Field(default=None, description="Aircraft type code (optional)")
     flight_number: str | None = Field(default=None, description="Flight number (optional)")
+    booking_url: str | None = Field(default=None, description="URL to book this flight")
 
     @field_validator("airline")
     @classmethod

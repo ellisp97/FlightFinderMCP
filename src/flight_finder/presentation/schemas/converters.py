@@ -116,6 +116,7 @@ def flight_to_dto(flight: Flight) -> FlightDTO:
         cabin_class=flight.cabin_class.class_type.value,
         stops=flight.stops,
         is_non_stop=flight.is_non_stop,
+        booking_url=flight.booking_url,
     )
 
 

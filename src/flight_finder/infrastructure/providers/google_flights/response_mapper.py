@@ -95,6 +95,8 @@ class SearchAPIResponseMapper:
 
         flight_id = flight_data.get("id", f"gf_{hash(str(flight_data))}")
 
+        booking_url = self._generate_booking_url(flight_data, criteria)
+
         return Flight(
             id=f"google_{flight_id}",
             origin=criteria.origin,
@@ -108,6 +110,7 @@ class SearchAPIResponseMapper:
             airline_name=airline_name,
             aircraft_type=first_segment.get("aircraft"),
             flight_number=first_segment.get("flight_number"),
+            booking_url=booking_url,
         )
 
     def _calculate_stops(self, segments: list[dict[str, Any]]) -> int:
@@ -140,3 +143,27 @@ class SearchAPIResponseMapper:
             return airline_name[:2].upper()
 
         return "XX"
+
+    def _generate_booking_url(
+        self,
+        flight_data: dict[str, Any],
+        criteria: SearchCriteria,
+    ) -> str | None:
+        """Generate a Google Flights booking/search URL."""
+        flight_segments = flight_data.get("flights", [])
+        if not flight_segments:
+            return None
+
+        first_segment = flight_segments[0]
+        departure_airport = first_segment.get("departure_airport", {})
+        last_segment = flight_segments[-1]
+        arrival_airport = last_segment.get("arrival_airport", {})
+
+        origin = departure_airport.get("id", criteria.origin.code)
+        destination = arrival_airport.get("id", criteria.destination.code)
+        date_str = criteria.departure_date.strftime("%Y-%m-%d")
+
+        # Build Google Flights URL
+        url = f"https://www.google.com/travel/flights?q=flights%20from%20{origin}%20to%20{destination}%20on%20{date_str}"
+
+        return url

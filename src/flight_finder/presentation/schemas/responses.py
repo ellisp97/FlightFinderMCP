@@ -32,3 +32,4 @@ class FlightDTO(BaseModel):
     cabin_class: str = Field(..., description="Cabin class")
     stops: int = Field(..., ge=0, description="Number of stops")
     is_non_stop: bool = Field(..., description="Whether flight is non-stop")
+    booking_url: str | None = Field(default=None, description="URL to book this flight")
