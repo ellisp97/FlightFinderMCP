@@ -153,18 +153,17 @@ def main() -> None:
     """Main entry point for the MCP server."""
     mcp, factory = create_server()
 
-    async def run_and_cleanup() -> None:
-        """Run server and cleanup on shutdown."""
-        try:
-            await mcp.run_async()
-        finally:
-            await factory.close()
-            logger.info("server_shutdown_complete")
+    async def cleanup() -> None:
+        """Cleanup resources on shutdown."""
+        await factory.close()
+        logger.info("server_shutdown_complete")
 
     try:
-        asyncio.run(run_and_cleanup())
+        mcp.run()
     except KeyboardInterrupt:
         logger.info("server_interrupted")
+    finally:
+        asyncio.run(cleanup())
 
 
 if __name__ == "__main__":
