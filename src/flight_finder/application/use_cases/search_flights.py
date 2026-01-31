@@ -127,4 +127,6 @@ class SearchFlightsUseCase:
 
     def _get_provider_names(self) -> list[str]:
         """Get list of provider names used in search."""
+        if hasattr(self._provider, "get_provider_names"):
+            return self._provider.get_provider_names()
         return [self._provider.provider_name]

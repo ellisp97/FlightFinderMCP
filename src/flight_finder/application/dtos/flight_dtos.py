@@ -4,12 +4,10 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
-if TYPE_CHECKING:
-    from flight_finder.domain.entities.flight import Flight
+from flight_finder.domain.entities.flight import Flight
 
 
 class SortOption(str, Enum):

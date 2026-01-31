@@ -28,6 +28,15 @@ class MultiProviderAggregator:
         self._providers = providers
         self._logger = logger.bind(component="multi_provider_aggregator")
 
+    @property
+    def provider_name(self) -> str:
+        """Return aggregator name."""
+        return "aggregator"
+
+    def get_provider_names(self) -> list[str]:
+        """Get list of all provider names in this aggregator."""
+        return [p.provider_name for p in self._providers]
+
     async def search(
         self,
         criteria: SearchCriteria,
