@@ -80,44 +80,9 @@ class SearchHandler:
 
             match result:
                 case Ok(search_result):
-                    flights_dto = [flight_to_dto(f) for f in search_result.flights]
-
-                    min_price = (
-                        min(f.price.amount for f in search_result.flights)
-                        if search_result.flights
-                        else None
-                    )
-                    max_price = (
-                        max(f.price.amount for f in search_result.flights)
-                        if search_result.flights
-                        else None
-                    )
-
-                    # Build markdown-formatted flight cards for better display
-                    formatted_flights = self._format_flights_for_display(
+                    # Return markdown directly for better display in chat
+                    return self._format_flights_for_display(
                         search_result.flights, origin, destination
-                    )
-
-                    return json.dumps(
-                        {
-                            "success": True,
-                            "summary": {
-                                "total_flights": search_result.total_results,
-                                "search_duration_ms": round(
-                                    search_result.search_duration_ms, 2
-                                ),
-                                "providers_used": search_result.providers_used,
-                                "cache_hit": search_result.cache_hit,
-                                "price_range": {
-                                    "min": str(min_price) if min_price else None,
-                                    "max": str(max_price) if max_price else None,
-                                },
-                            },
-                            "formatted_results": formatted_flights,
-                            "flights": [f.model_dump() for f in flights_dto],
-                        },
-                        indent=2,
-                        default=str,
                     )
 
                 case Err(error):
