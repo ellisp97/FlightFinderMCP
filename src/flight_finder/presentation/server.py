@@ -93,6 +93,10 @@ def create_server() -> tuple[FastMCP, ProviderFactory]:
     ) -> str:
         """Search for flights between airports.
 
+        Returns formatted markdown with flight options including clickable booking links.
+        IMPORTANT: Always display the results exactly as returned, preserving the markdown
+        formatting and clickable [Book this flight](url) links for each flight option.
+
         Args:
             origin: Origin airport IATA code (e.g., 'JFK', 'LAX', 'LHR')
             destination: Destination airport IATA code (e.g., 'JFK', 'LAX', 'LHR')
@@ -106,7 +110,7 @@ def create_server() -> tuple[FastMCP, ProviderFactory]:
             non_stop_only: If true, only return non-stop flights
 
         Returns:
-            JSON string with flight results or error message
+            Markdown formatted flight results with booking links
         """
         return await search_handler.handle_search(
             origin=origin,
